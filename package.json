@@ -6,8 +6,7 @@
   "author": "kozr <zxzflow@gmail.com>",
   "license": "no",
   "private": true,
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "electron": "^10.1.1",
     "typescript": "^4.0.2"
@@ -15,6 +14,6 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "yarn run build -- --watch & yarn start",
-    "start": "electron ./out/electron/index.js"
+    "start": "tsc & electron ./out/electron/index.js"
   }
 }
