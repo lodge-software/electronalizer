@@ -4,12 +4,13 @@
   "main": "index.js",
   "repository": "git@github.com:lodge-software/electronalizer.git",
   "author": "kozr <zxzflow@gmail.com>",
-  "license": "no",
+  "license": "UNLICENSED",
   "private": true,
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "^4.1.0",
     "@typescript-eslint/parser": "^4.1.0",
     "eslint": "^7.8.1",
+    "html-webpack-plugin": "^4.4.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },
@@ -27,8 +28,8 @@
     "webpack-cli": "^3.3.12"
   },
   "scripts": {
-    "build": "webpack --config webpack.config.js",
-    "start": "yarn build && electron ./out/electron/index.js",
     "lint": "eslint '*/**/*.{js,ts,tsx}' --fix"
+    "build": "webpack --config webpack.website.config.js --config webpack.electron.config.js",
+    "start": "yarn build && electron ./out/electron/index.js"
   }
 }
