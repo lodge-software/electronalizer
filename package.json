@@ -28,7 +28,7 @@
     "webpack-cli": "^3.3.12"
   },
   "scripts": {
-    "lint": "eslint '*/**/*.{js,ts,tsx}' --fix"
+    "lint": "eslint '*/**/*.{js,ts,tsx}' --fix",
     "build": "webpack --config webpack.website.config.js --config webpack.electron.config.js",
     "start": "yarn build && electron ./out/electron/index.js"
   }
