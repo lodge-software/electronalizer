@@ -6,8 +6,7 @@
   "author": "kozr <zxzflow@gmail.com>",
   "license": "no",
   "private": true,
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "electron": "^10.1.1",
     "typescript": "^4.0.2"
