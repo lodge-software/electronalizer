@@ -5,7 +5,7 @@ import * as ReactDOM from 'react-dom';
 const app = document.getElementById('app');
 
 // Here's an example of a couple of simple React components
-const Emphasis: React.FunctionComponent = props => <em>{props.children}</em>;
+const Emphasis: React.FunctionComponent = (props) => <em>{props.children}</em>;
 
 // You can see how we can mix html and nested components together
 const App = () => (
