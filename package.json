@@ -14,7 +14,6 @@
   },
   "scripts": {
     "build": "tsc",
-    "build:watch": "yarn run build -- --watch & yarn start",
-    "start": "electron ./out/electron/index.js"
+    "start": "yarn build && electron ./out/electron/index.js"
   }
 }
