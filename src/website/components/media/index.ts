@@ -1,3 +1,4 @@
 import Video from './Video';
+import Audio from './Audio';
 
-export default Video;
+export { Video, Audio };

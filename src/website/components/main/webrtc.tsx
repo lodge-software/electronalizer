@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import Video from '../media/Video';
+import { Audio } from '../media';
 
 const Main = function (): JSX.Element {
-  const [stream, setStream] = useState(new MediaStream());
+  // const [videoStream, setVideoStream] = useState(new MediaStream());
+  const [audioStream, setAudioStream] = useState<MediaStream>(new MediaStream());
   const [startDisable, setStartDisable] = useState(false);
   const [callDisable, setCallDisable] = useState(true);
   const [hangupDisable, setHangupDisable] = useState(true);
@@ -11,9 +12,10 @@ const Main = function (): JSX.Element {
     console.log('Requesting local stream');
     setStartDisable(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      // const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       console.log('Received local stream');
-      setStream(stream);
+      setAudioStream(audioStream);
       setCallDisable(false);
     } catch (e) {
       alert(`getUserMedia() error: ${e.name}`);
@@ -22,7 +24,8 @@ const Main = function (): JSX.Element {
 
   return (
     <div className="main">
-      <Video srcObject={stream} id="localVideo"></Video>
+      {/* <Video srcObject={stream} id="localVideo"></Video> */}
+      <Audio srcObject={audioStream} id="localAudio"></Audio>
       <video id="remoteVideo" autoPlay></video>
       <button disabled={startDisable} onClick={start}>
         {'Start'}
