@@ -2,7 +2,7 @@ import React from 'react';
 import Video from './components/Video';
 
 class Main extends React.Component {
-  constructor(props: any) {
+  constructor(props: never) {
     super(props);
     this.state = {
       stream: undefined,
