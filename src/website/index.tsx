@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
+import Main from './webrtc';
 
 // We find our app DOM element as before
 const app = document.getElementById('app');
@@ -11,7 +12,7 @@ const Emphasis: React.FunctionComponent = (props) => <em>{props.children}</em>;
 // You can see how we can mix html and nested components together
 const App = () => (
   <div>
-    Hello, <Emphasis>world</Emphasis>
+    <Main />
   </div>
 );
 
