@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
-import Main from './webrtc';
+import Main from './components/main/webrtc';
 
 // We find our app DOM element as before
 const app = document.getElementById('app');
