@@ -1,4 +1,4 @@
-import {app, BrowserWindow} from 'electron';
+import { app, BrowserWindow } from 'electron';
 
 function createWindow() {
   // once electron has started up, create a window.

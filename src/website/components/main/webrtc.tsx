@@ -1,5 +1,5 @@
 import React from 'react';
-import Video from './components/Video';
+import Video from '../media/Video';
 
 class Main extends React.Component {
   constructor(props: any) {
