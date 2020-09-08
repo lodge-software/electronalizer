@@ -1,4 +1,5 @@
 import React from 'react';
+import Video from './components/Video';
 
 class Main extends React.Component {
   constructor(props: any) {
@@ -8,6 +9,7 @@ class Main extends React.Component {
       startDisable: false,
       callDisable: true,
       hangupDisable: true,
+      srcObject: null,
     };
   }
 
@@ -15,11 +17,11 @@ class Main extends React.Component {
 
   start = async () => {
     console.log('Requesting local stream');
-    this.setState({startDisable: true});
+    this.setState({ startDisable: true });
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({audio: true, video: true});
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       console.log('Received local stream');
-      this.setState({stream: stream, callDisable: false});
+      this.setState({ stream: stream, callDisable: false });
     } catch (e) {
       alert(`getUserMedia() error: ${e.name}`);
     }
@@ -28,7 +30,7 @@ class Main extends React.Component {
   render() {
     return (
       <div className="main">
-        <video src={this.state.stream} id="localVideo" autoPlay muted></video>
+        <Video srcObject={this.state.stream} id="localVideo"></Video>
         <video id="remoteVideo" autoPlay></video>
         <button disabled={this.state.startDisable} onClick={this.start}>
           {'Start'}
