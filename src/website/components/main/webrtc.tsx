@@ -1,45 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Video from '../media/Video';
 
-class Main extends React.Component {
-  constructor(props: any) {
-    super(props);
-    this.state = {
-      stream: undefined,
-      startDisable: false,
-      callDisable: true,
-      hangupDisable: true,
-      srcObject: null,
-    };
-  }
+const Main = function (): JSX.Element {
+  const [stream, setStream] = useState(new MediaStream());
+  const [startDisable, setStartDisable] = useState(false);
+  const [callDisable, setCallDisable] = useState(true);
+  const [hangupDisable, setHangupDisable] = useState(true);
 
-  state: any;
-
-  start = async () => {
+  const start = async () => {
     console.log('Requesting local stream');
-    this.setState({ startDisable: true });
+    setStartDisable(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       console.log('Received local stream');
-      this.setState({ stream: stream, callDisable: false });
+      setStream(stream);
+      setCallDisable(false);
     } catch (e) {
       alert(`getUserMedia() error: ${e.name}`);
     }
   };
 
-  render() {
-    return (
-      <div className="main">
-        <Video srcObject={this.state.stream} id="localVideo"></Video>
-        <video id="remoteVideo" autoPlay></video>
-        <button disabled={this.state.startDisable} onClick={this.start}>
-          {'Start'}
-        </button>
-        <button disabled={this.state.callDisable}>{'Call'}</button>
-        <button disabled={this.state.hangupDisable}>{'Hang Up'}</button>
-      </div>
-    );
-  }
-}
+  return (
+    <div className="main">
+      <Video srcObject={stream} id="localVideo"></Video>
+      <video id="remoteVideo" autoPlay></video>
+      <button disabled={startDisable} onClick={start}>
+        {'Start'}
+      </button>
+      <button disabled={callDisable}>{'Call'}</button>
+      <button disabled={hangupDisable} onClick={() => setHangupDisable(!hangupDisable)}>
+        {'Hang Up'}
+      </button>
+    </div>
+  );
+};
 
 export default Main;
