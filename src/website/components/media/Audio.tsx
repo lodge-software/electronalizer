@@ -15,5 +15,6 @@ export default function Video({ srcObject, ...props }: PropsType) {
     }
   }, [srcObject]);
 
-  return <audio ref={refAudio} {...props} autoPlay />;
+  // return <audio ref={refAudio} {...props} autoPlay />;
+  return <audio ref={refAudio} {...props} />;
 }
