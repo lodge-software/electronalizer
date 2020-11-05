@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Audio } from '../media';
-import io from 'socket.io-client';
+import { socket } from './sockets';
 
 const Main = function (): JSX.Element {
   // const [videoStream, setVideoStream] = useState(new MediaStream());
@@ -15,12 +15,6 @@ const Main = function (): JSX.Element {
     offerToReceiveAudio: true,
     offerToReceiveVideo: false,
   };
-
-  const getSignalingServer = (): string => {
-    return 'http://localhost:7000';
-  };
-
-  let socket: SocketIOClient.Socket;
 
   const start = async () => {
     console.log('Requesting local stream');
@@ -49,33 +43,18 @@ const Main = function (): JSX.Element {
       const configuration = {};
       console.log('RTCPeerConnection configuration:', configuration);
       local = new RTCPeerConnection(configuration);
+
+      audioTracks.forEach((track) => local.addTrack(track));
+
       const offer = await local.createOffer(offerOptions);
       local.setLocalDescription(offer);
-      /* 
-      TODO: It makes more sense for socket to exist at top level so we can
-      answer calls without having to click call. This implementation will
-      only allow you to receive offer if you click call.
-      */
-      socket = io(getSignalingServer());
 
-      socket.on('connect', () => {
-        console.log(`My current socket id is ${socket.id}`);
-        // Send offer to remote
-        socket.emit('offer', { socket: socket.id, desc: local.localDescription });
+      socket.emit('offer', { socket: socket.id, desc: local.localDescription });
 
-        // Listens for any offers from remote -> signaling server -> here
-        socket.on('offer', async (currOffer: any) => {
-          console.log(`Request for connection received. SocketID is: ${currOffer.socket}`);
-          await local.setRemoteDescription(currOffer.desc);
-          local.setLocalDescription(await local.createAnswer());
-          socket.emit('answer', { socket: socket.id, desc: local.localDescription, dest: currOffer.socket });
-        });
-
-        // Listens for answers from remote -> signaling server -> here
-        socket.on('answer', async (answer: any) => {
-          console.log(`Answer received from remote: ${answer.socket}`);
-          await local.setRemoteDescription(answer.desc).catch((e) => console.log(e));
-        });
+      // Listens for answers from remote -> signaling server -> here
+      socket.on('answer', async (answer: any) => {
+        console.log(`Answer received from remote: ${answer.socket}`);
+        await local.setRemoteDescription(answer.desc).catch((e) => console.log(e));
       });
     } catch (e) {
       alert(`error starting call: ${e}`);
@@ -87,6 +66,24 @@ const Main = function (): JSX.Element {
     setCallDisable(true);
     setHangupDisable(true);
   };
+
+  useEffect(() => {
+    socket.on('connect', () => {
+      console.log(`My current socket id is ${socket.id}`);
+      // Send offer to remote
+    });
+
+    socket.on('disconnect', () => {
+      console.log(`The socket id: ${socket.id} has disconnected`);
+    });
+    // Listens for any offers from remote -> signaling server -> here
+    socket.on('offer', async (currOffer: any) => {
+      console.log(`Request for connection received. SocketID is: ${currOffer.socket}`);
+      await local.setRemoteDescription(currOffer.desc);
+      local.setLocalDescription(await local.createAnswer());
+      socket.emit('answer', { socket: socket.id, desc: local.localDescription, dest: currOffer.socket });
+    });
+  });
 
   // const getSelectedSdpSemantics = (): RTCConfiguration => {
   //   return { sdpSemantics: "unified-plan" };
