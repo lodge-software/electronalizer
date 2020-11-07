@@ -93,7 +93,7 @@ const Main = function (): JSX.Element {
   const constraints: MediaStreamConstraints = { audio: true, video: false };
 
   const hangup = async () => {
-    setCallDisable(true);
+    setCallDisable(false);
     setHangupDisable(true);
     // TODO not working:
     // localPeerConnection.ontrack = null;
