@@ -6,8 +6,7 @@ type PropsType = AudioHTMLAttributes<HTMLAudioElement> & {
   isAutoPlay: boolean;
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export default function Video({ srcObject, isAutoPlay, ...props }: PropsType) {
+export default function Audio({ srcObject, isAutoPlay, ...props }: PropsType): JSX.Element {
   const refAudio = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -16,9 +15,5 @@ export default function Video({ srcObject, isAutoPlay, ...props }: PropsType) {
     }
   }, [srcObject]);
 
-  return isAutoPlay ? (
-    <audio ref={refAudio} {...props} autoPlay muted={true} />
-  ) : (
-      <audio ref={refAudio} muted={true} {...props} />
-    );
+  return isAutoPlay ? <audio ref={refAudio} {...props} autoPlay /> : <audio ref={refAudio} muted={true} {...props} />;
 }
