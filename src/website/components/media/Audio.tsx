@@ -2,7 +2,7 @@ import { AudioHTMLAttributes, useEffect, useRef } from 'react';
 import React from 'react';
 
 type PropsType = AudioHTMLAttributes<HTMLAudioElement> & {
-  srcObject: MediaStream;
+  srcObject: MediaStream | undefined;
   isAutoPlay: boolean;
 };
 
@@ -10,7 +10,7 @@ export default function Audio({ srcObject, isAutoPlay, ...props }: PropsType): J
   const refAudio = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    if (refAudio.current) {
+    if (refAudio.current && srcObject) {
       refAudio.current.srcObject = srcObject;
     }
   }, [srcObject]);

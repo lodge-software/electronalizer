@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Audio } from '../media';
 import { socket } from './sockets';
+import { Signal } from '../types/sockets';
 
 const Main = function (): JSX.Element {
-  // const [videoStream, setVideoStream] = useState(new MediaStream());
-  // const [audioStream, setAudioStream] = useState<MediaStream>(new MediaStream());
-  const [remoteAudioStream, setRemoteAudioStream] = useState<MediaStream>(new MediaStream());
+  const [remoteAudioStream, setRemoteAudioStream] = useState<MediaStream | undefined>();
   const [callDisable, setCallDisable] = useState(false);
   const [hangupDisable, setHangupDisable] = useState(true);
 
@@ -26,6 +25,7 @@ const Main = function (): JSX.Element {
 
   const handleICECandidateEvent = (event: any) => {
     if (event.candidate) {
+      console.log(`handleICECandidateEvent: ${event}`);
       socket.emit('new-ice-candidate', {
         // target: targetUsername,
         candidate: event.candidate,
@@ -51,44 +51,43 @@ const Main = function (): JSX.Element {
 
   const call = async () => {
     try {
-      // setCallDisable(true);
-      // setHangupDisable(false);
+      setCallDisable(true);
+      setHangupDisable(false);
 
       const localPeerConnection = createPeerConnection();
 
       console.log('Requesting local stream');
-      const localStream = await navigator.mediaDevices.getUserMedia(constraints);
-
-      const audioTracks = localStream.getTracks();
-      if (audioTracks.length > 0) {
-        console.log(`Using Audio device: ${audioTracks[0].label}`);
-      }
-      localStream.getTracks().forEach((t) => localPeerConnection.addTrack(t, localStream));
-      console.log('Added tracks');
-
-      const iceCandidates = [];
-      localPeerConnection.onicecandidate = (e: { candidate: any }) => {
-        if (e.candidate) {
-          iceCandidates.push(e.candidate);
-        }
-      };
+      await configureTracks();
 
       const offer = await localPeerConnection.createOffer(offerOptions);
       await localPeerConnection.setLocalDescription(offer);
       console.log(`Created offer`);
 
-      socket.on('answer', async (answer: any) => {
-        console.log(`Answer received from remote: ${answer.data}`);
-        await localPeerConnection
-          .setRemoteDescription(new RTCSessionDescription(answer.data))
-          .catch((e: any) => console.log(e));
+      socket.on('answer', async (answer: Signal) => {
+        console.log(`Answer received from remote: ${answer.payload}`);
+        await localPeerConnection.setRemoteDescription(new RTCSessionDescription(answer.payload));
       });
 
-      socket.emit('offer', { data: offer });
+      socket.emit('offer', {
+        origin: socket.id,
+        payload: offer,
+        target: 'temp',
+      });
       console.log(`Emitted offer`);
     } catch (e) {
       alert(`error starting call: ${e}`);
     }
+  };
+
+  const configureTracks = async () => {
+    const localStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+    const audioTracks = localStream.getTracks();
+    if (audioTracks.length > 0) {
+      console.log(`Using Audio device: ${audioTracks[0].label}`);
+    }
+    localStream.getTracks().forEach((t) => localPeerConnection.addTrack(t, localStream));
+    console.log('Added local tracks');
   };
 
   const constraints: MediaStreamConstraints = { audio: true, video: false };
@@ -96,38 +95,33 @@ const Main = function (): JSX.Element {
   const hangup = async () => {
     setCallDisable(true);
     setHangupDisable(true);
+    // TODO not working:
+    // localPeerConnection.ontrack = null;
+    // localPeerConnection.onicecandidate = null;
+    // if (remoteAudioStream) {
+    //   remoteAudioStream.getTracks().forEach((track) => track.stop());
+    // }
+    // localPeerConnection.close();
   };
 
   useEffect(() => {
-    socket.on('connect', () => {
-      console.log(`My current socket id is ${socket.id}`);
-    });
-
-    socket.on('disconnect', () => {
-      console.log(`The socket id: ${socket.id} has disconnected`);
-    });
-
-    socket.on('offer', async (payload: any) => {
+    socket.on('offer', async (offer: Signal) => {
       console.log(`Request for connection received.`);
 
       localPeerConnection = createPeerConnection();
       console.log('Created peer connection');
 
-      await localPeerConnection.setRemoteDescription(new RTCSessionDescription(payload.data));
+      await localPeerConnection.setRemoteDescription(new RTCSessionDescription(offer.payload));
 
-      const localStream = await navigator.mediaDevices.getUserMedia(constraints);
-
-      const audioTracks = localStream.getTracks();
-      if (audioTracks.length > 0) {
-        console.log(`Using Audio device: ${audioTracks[0].label}`);
-      }
-      localStream.getTracks().forEach((t) => localPeerConnection.addTrack(t, localStream));
-      console.log('Added local tracks');
+      console.log('Requesting local stream');
+      await configureTracks();
 
       const answer = await localPeerConnection.createAnswer();
       await localPeerConnection.setLocalDescription(answer);
       socket.emit('answer', {
-        data: answer,
+        origin: socket.id,
+        payload: answer,
+        target: 'temp',
       });
     });
 
@@ -140,7 +134,6 @@ const Main = function (): JSX.Element {
 
   return (
     <div className="main">
-      {/* <Audio srcObject={audioStream} isAutoPlay={true} id="localAudio"></Audio> */}
       <Audio srcObject={remoteAudioStream} isAutoPlay={true} id="remoteAudio"></Audio>
       <button disabled={callDisable} onClick={call}>
         {'Call'}

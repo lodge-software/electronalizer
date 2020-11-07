@@ -7,4 +7,14 @@ const getSignalingServer = (): void => {
 
 getSignalingServer();
 
-export const socket = io(SOCKET_URL);
+const socket = io(SOCKET_URL);
+
+socket.on('connect', () => {
+  console.log(`My current socket id is ${socket.id}`);
+});
+
+socket.on('disconnect', () => {
+  console.log(`The socket id: ${socket.id} has disconnected`);
+});
+
+export { socket };
