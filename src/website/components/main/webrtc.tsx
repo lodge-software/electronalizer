@@ -7,6 +7,8 @@ const Main = function (): JSX.Element {
   const [remoteAudioStream, setRemoteAudioStream] = useState<MediaStream | undefined>();
   const [callDisable, setCallDisable] = useState(false);
   const [hangupDisable, setHangupDisable] = useState(true);
+  const [room, setRoom] = useState('');
+  const [remoteId, setRemoteId] = useState('');
 
   let localPeerConnection: RTCPeerConnection;
 
@@ -34,6 +36,7 @@ const Main = function (): JSX.Element {
   };
 
   const createPeerConnection = () => {
+    if (localPeerConnection) return;
     const peerConnectionConfig = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -46,7 +49,19 @@ const Main = function (): JSX.Element {
     localPeerConnection = new RTCPeerConnection(peerConnectionConfig);
     localPeerConnection.onicecandidate = handleICECandidateEvent;
     localPeerConnection.ontrack = handleTrackEvent;
-    return localPeerConnection;
+    // return localPeerConnection;
+  };
+
+  const createRoom = () => {
+    setRoom(`room-${socket.id}`);
+    console.log(`${room}`);
+  };
+
+  const joinRoom = () => {
+    socket.emit('join room', { room: room });
+    // socket.on('cannot join room', () => {
+    //   console.log('Failed to join room');
+    // });
   };
 
   const call = async () => {
@@ -54,10 +69,10 @@ const Main = function (): JSX.Element {
       setCallDisable(true);
       setHangupDisable(false);
 
-      const localPeerConnection = createPeerConnection();
+      createPeerConnection();
 
-      console.log('Requesting local stream');
-      await configureTracks();
+      await configureRTCTracks();
+      console.log('Requested local stream');
 
       const offer = await localPeerConnection.createOffer(offerOptions);
       await localPeerConnection.setLocalDescription(offer);
@@ -66,12 +81,20 @@ const Main = function (): JSX.Element {
       socket.on('answer', async (answer: Signal) => {
         console.log(`Answer received from remote: ${answer.payload}`);
         await localPeerConnection.setRemoteDescription(new RTCSessionDescription(answer.payload));
+
+        // Refactor, also possibly missing ice candidates because race condition?
+        socket.on('new-ice-candidate', async (payload: any) => {
+          console.log(`Received ICE Candidates: ${JSON.stringify(payload)}`);
+          const candidate = new RTCIceCandidate(payload.candidate);
+          await localPeerConnection.addIceCandidate(candidate);
+        });
       });
 
       socket.emit('offer', {
         origin: socket.id,
         payload: offer,
-        target: 'temp',
+        target: remoteId,
+        room: room,
       });
       console.log(`Emitted offer`);
     } catch (e) {
@@ -79,7 +102,8 @@ const Main = function (): JSX.Element {
     }
   };
 
-  const configureTracks = async () => {
+  // refactor into other component
+  const configureRTCTracks = async () => {
     const localStream = await navigator.mediaDevices.getUserMedia(constraints);
 
     const audioTracks = localStream.getTracks();
@@ -107,34 +131,55 @@ const Main = function (): JSX.Element {
   useEffect(() => {
     socket.on('offer', async (offer: Signal) => {
       console.log(`Request for connection received.`);
+      if (room != offer.room) {
+        // Implement invite
+      } else {
+        setRoom(offer.room);
+      }
+      setRemoteId(offer.origin);
 
-      localPeerConnection = createPeerConnection();
+      createPeerConnection();
       console.log('Created peer connection');
 
       await localPeerConnection.setRemoteDescription(new RTCSessionDescription(offer.payload));
 
       console.log('Requesting local stream');
-      await configureTracks();
+      await configureRTCTracks();
 
       const answer = await localPeerConnection.createAnswer();
       await localPeerConnection.setLocalDescription(answer);
+      console.log(`room: ${room}`);
       socket.emit('answer', {
         origin: socket.id,
         payload: answer,
-        target: 'temp',
+        target: remoteId,
+        room: offer.room,
+      });
+
+      socket.on('new-ice-candidate', async (payload: any) => {
+        console.log(`Received ICE Candidates: ${JSON.stringify(payload)}`);
+        const candidate = new RTCIceCandidate(payload.candidate);
+        await localPeerConnection.addIceCandidate(candidate);
       });
     });
 
-    socket.on('new-ice-candidate', async (payload: any) => {
-      console.log(`Received ICE Candidates: ${JSON.stringify(payload)}`);
-      const candidate = new RTCIceCandidate(payload.candidate);
-      await localPeerConnection.addIceCandidate(candidate);
+    socket.on('joined room', (payload: any) => {
+      console.log(payload.room);
+      setRoom(payload.room);
+      // socket.off('cannot join room');
     });
   }, []);
 
   return (
     <div className="main">
       <Audio srcObject={remoteAudioStream} isAutoPlay={true} id="remoteAudio"></Audio>
+      <button disabled={callDisable} onClick={createRoom}>
+        {'Create room'}
+      </button>
+      <input type="text" value={room} onChange={(e) => setRoom(e.target.value)} />
+      <button disabled={callDisable} onClick={joinRoom}>
+        {'Join room'}
+      </button>
       <button disabled={callDisable} onClick={call}>
         {'Call'}
       </button>

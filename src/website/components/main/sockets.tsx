@@ -9,12 +9,15 @@ getSignalingServer();
 
 const socket = io(SOCKET_URL);
 
+let socketId: string;
+
 socket.on('connect', () => {
   console.log(`My current socket id is ${socket.id}`);
+  socketId = socket.id;
 });
 
 socket.on('disconnect', () => {
   console.log(`The socket id: ${socket.id} has disconnected`);
 });
 
-export { socket };
+export { socket, socketId };

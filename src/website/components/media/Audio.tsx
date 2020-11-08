@@ -15,5 +15,5 @@ export default function Audio({ srcObject, isAutoPlay, ...props }: PropsType): J
     }
   }, [srcObject]);
 
-  return isAutoPlay ? <audio ref={refAudio} {...props} autoPlay /> : <audio ref={refAudio} muted={true} {...props} />;
+  return isAutoPlay ? <audio ref={refAudio} {...props} autoPlay /> : <audio ref={refAudio} {...props} />;
 }
