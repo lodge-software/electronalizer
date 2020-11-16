@@ -134,10 +134,12 @@ const Main = function (): JSX.Element {
       if (room != offer.room) {
         // Implement invite
       } else {
-        setRoom(offer.room);
+        // Maybe don't need:
+        // setRoom(offer.room);
       }
       setRemoteId(offer.origin);
 
+      // Prevent one person from calling multiple times
       createPeerConnection();
       console.log('Created peer connection');
 
